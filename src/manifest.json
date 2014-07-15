@@ -1,0 +1,38 @@
+{
+    "name": "Nope",
+    "version": "1.0",
+    "manifest_version": 2,
+    "author": "Armand Grillet",
+    "description": "Enhance your productivity",
+    "homepage_url": "https://github.com/ArmandGrillet/Preview-for-Designer-News",
+
+    "background": {
+    	"scripts": ["js/right-click.js"]
+  	},
+    "browser_action": {
+	    "description": "Enhance your productivity",
+	    "default_popup": "popup.html"
+	},
+    "icons": {
+    	"16": "img/icon16.png",
+        "48": "img/icon48.png",
+        "128": "img/icon128.png"
+    },
+    "permissions": [
+        "contextMenus",
+        "http://*/*",
+        "https://*/*"
+    ],
+    "content_scripts": [
+        {
+            "matches": [
+                "http://*/*",
+                "https://*/*"
+            ],
+            "js": [
+                "js/check-nope.js"
+            ],
+            "run_at" : "document_start"
+        }
+    ]
+}

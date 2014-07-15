@@ -1,0 +1,4 @@
+/*
+alert("meuh");
+window.stop();
+*/

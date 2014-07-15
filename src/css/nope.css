@@ -1,0 +1,13 @@
+body {
+	height: 100%;
+	width: 100%;
+
+	background: #fafafa;
+}
+
+h1 {
+	display: none;
+	font-size: 15em;
+
+	text-align: center;
+}
