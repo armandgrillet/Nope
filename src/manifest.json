@@ -7,11 +7,13 @@
     "homepage_url": "https://github.com/ArmandGrillet/Preview-for-Designer-News",
 
     "background": {
-    	"scripts": ["js/right-click.js"]
+    	"scripts": [
+            "js/background.js"
+        ],
+        "persistent": true
   	},
     "browser_action": {
-	    "description": "Enhance your productivity",
-	    "default_popup": "popup.html"
+	    "description": "Enhance your productivity"
 	},
     "icons": {
     	"16": "img/icon16.png",
@@ -21,7 +23,8 @@
     "permissions": [
         "contextMenus",
         "http://*/*",
-        "https://*/*"
+        "https://*/*",
+        "storage"
     ],
     "content_scripts": [
         {
@@ -30,7 +33,7 @@
                 "https://*/*"
             ],
             "js": [
-                "js/check-nope.js"
+                "js/nope.js"
             ],
             "run_at" : "document_start"
         }

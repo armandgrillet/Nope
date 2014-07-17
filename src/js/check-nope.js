@@ -1,4 +1,0 @@
-/*
-alert("meuh");
-window.stop();
-*/
