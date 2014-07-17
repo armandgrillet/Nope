@@ -3,19 +3,59 @@ var nopeIsActivated;
 var tabs = {}; // Tabs and url.
 
 /* Functions. */
-function updateContextMenu () {
-    /* Check variables. */
-    if (websitesNoped == undefined) {
-        chrome.storage.sync.get("websitesNoped", function(nopeSync) {
-            websitesNoped = nopeSync.websitesNoped;
-        });
-    }
+function addNopeContextMenu () {
+    chrome.contextMenus.update("nope", {
+        "enabled": true,
+        "onclick": function (info, tab) {
+            console.log(info);
+            console.log(tab);
+        },
+        "title": "Add Nope for this website"
+    });
+}
 
-    if (nopeIsActivated == undefined) {
-        chrome.storage.sync.get("nopeIsActivated", function(nopeSync) {
+function nopeIsNotReady () {
+    chrome.contextMenus.update("nope", {
+        "enabled": false,
+        "onclick": function (info, tab) {},
+        "title": "Reload this webpage to Nope it!"
+    });
+}
+
+function checkNope (tabId) {
+    /* Check variables. */
+    if (websitesNoped == undefined || nopeIsActivated == undefined) {
+        chrome.storage.sync.get(["websitesNoped", "nopeIsActivated"], function(nopeSync) {
+            websitesNoped = nopeSync.websitesNoped;
             nopeIsActivated = nopeSync.nopeIsActivated;
+            updateContextMenu(tabId);
         });
+    } else {
+        updateContextMenu(tabId);
     }
+}
+
+function updateContextMenu (tabId) {
+    if (tabs[tabId] != undefined) { // If the tab has been updated after the installation of Nope.
+        if (websitesNoped.indexOf(tabs[tabId]) > -1) {
+            removeNopeContextMenu();
+        } else {
+            addNopeContextMenu();
+        }
+    } else {
+        nopeIsNotReady();
+    }
+}
+
+function removeNopeContextMenu() {
+    chrome.contextMenus.update("nope", {
+        "enabled": true,
+        "onclick": function (info, tab) {
+            console.log(info);
+            console.log(tab);
+        },
+        "title": "Remove Nope for this website"
+    });
 }
 
 function removeNopeForWebsite(tab) {
@@ -30,6 +70,7 @@ function nopeNewWebsite(info, tab) {
 /* Chrome events. */
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
+        console.log("On ajoute la tab");
         tabs[sender.tab.id] = request.url;
         if (websitesNoped.indexOf(request.url) > -1) {
             if (nopeIsActivated) {
@@ -37,24 +78,8 @@ chrome.runtime.onMessage.addListener(
             } else {
                 sendResponse({nopeIt: false});
             }
-            chrome.contextMenus.update("nope", {
-                "enabled": true,
-                "onclick": function (info, tab) {
-                    console.log(info);
-                    console.log(tab);
-                },
-                "title": "Remove Nope for this website"
-            });
         } else {
             sendResponse({nopeIt: false});
-            chrome.contextMenus.update("nope", {
-                "enabled": true,
-                "onclick": function (info, tab) {
-                    console.log(info);
-                    console.log(tab);
-                },
-                "title": "Nope this website"
-            });
         }
     });
 
@@ -75,14 +100,17 @@ chrome.runtime.onInstalled.addListener(function() {
     });
 });
 
+chrome.tabs.onRemoved.addListener(function(removeInfo) {
+    delete tabs[removeInfo.tabId]; // Remove the tab in the dictionnary.
+});
+
 chrome.tabs.onActivated.addListener(function(activeInfo) {
-    // Update contextMenu
-    updateContextMenu();
+    checkNope(activeInfo.tabId);
 });
 
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, updatedTab) {
-    // update contextMenu
-    if (changeInfo.status == "loading") {
-        updateContextMenu();
+    if (changeInfo.status == "complete") {
+        console.log("On check la tab");
+        checkNope(tabId);
     }
 });
