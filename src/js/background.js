@@ -16,19 +16,45 @@ function updateContextMenu () {
             nopeIsActivated = nopeSync.nopeIsActivated;
         });
     }
+}
 
-    /* Update context menu. */
+function removeNopeForWebsite(tab) {
+    console.log(tab);
+}
 
+function nopeNewWebsite(info, tab) {
+    console.log("meu");
+    console.log(tab);
 }
 
 /* Chrome events. */
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
         tabs[sender.tab.id] = request.url;
-        if (nopeIsActivated && websitesNoped.indexOf(request.url) > -1) {
-            sendResponse({nopeIt: true});
+        if (websitesNoped.indexOf(request.url) > -1) {
+            if (nopeIsActivated) {
+                sendResponse({nopeIt: true});
+            } else {
+                sendResponse({nopeIt: false});
+            }
+            chrome.contextMenus.update("nope", {
+                "enabled": true,
+                "onclick": function (info, tab) {
+                    console.log(info);
+                    console.log(tab);
+                },
+                "title": "Remove Nope for this website"
+            });
         } else {
             sendResponse({nopeIt: false});
+            chrome.contextMenus.update("nope", {
+                "enabled": true,
+                "onclick": function (info, tab) {
+                    console.log(info);
+                    console.log(tab);
+                },
+                "title": "Nope this website"
+            });
         }
     });
 
@@ -42,8 +68,10 @@ chrome.runtime.onInstalled.addListener(function() {
         }
     });
     chrome.contextMenus.create({
-        "title": "Refresh this webpage to Nope it!",
-        "id": "nope"
+        "enabled": false,
+        "id": "nope",
+        "onclick": function (info, tab) {},
+        "title": "Reload this webpage to Nope it!"
     });
 });
 
