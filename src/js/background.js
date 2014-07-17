@@ -4,28 +4,31 @@ var tabs = {}; // Tabs and url.
 
 /* Functions. */
 function updateContextMenu () {
+    /* Check variables. */
+    if (websitesNoped == undefined) {
+        chrome.storage.sync.get("websitesNoped", function(nopeSync) {
+            websitesNoped = nopeSync.websitesNoped;
+        });
+    }
+
+    if (nopeIsActivated == undefined) {
+        chrome.storage.sync.get("nopeIsActivated", function(nopeSync) {
+            nopeIsActivated = nopeSync.nopeIsActivated;
+        });
+    }
+
+    /* Update context menu. */
 
 }
 
-/* Chrome events */
+/* Chrome events. */
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
-        tabs[sender.tab] = request.url;
-        if (websitesNoped == undefined) {
-            chrome.storage.sync.get("websitesNoped", function(nopeSync) {
-                websitesNoped = nopeSync.websitesNoped;
-                if (websitesNoped.indexOf(request.url) > -1) {
-                    sendResponse({websiteIsNoped: true});
-                } else {
-                    sendResponse({websiteIsNoped: false});
-                }
-            });
+        tabs[sender.tab.id] = request.url;
+        if (nopeIsActivated && websitesNoped.indexOf(request.url) > -1) {
+            sendResponse({nopeIt: true});
         } else {
-            if (websitesNoped.indexOf(request.url) > -1) {
-                sendResponse({websiteIsNoped: true});
-            } else {
-                sendResponse({websiteIsNoped: false});
-            }
+            sendResponse({nopeIt: false});
         }
     });
 
@@ -39,8 +42,7 @@ chrome.runtime.onInstalled.addListener(function() {
         }
     });
     chrome.contextMenus.create({
-        "title": "Nope",
-        "type": "checkbox",
+        "title": "Refresh this webpage to Nope it!",
         "id": "nope"
     });
 });
@@ -52,7 +54,6 @@ chrome.tabs.onActivated.addListener(function(activeInfo) {
 
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, updatedTab) {
     // update contextMenu
-    console.log(tabId);
     if (changeInfo.status == "loading") {
         updateContextMenu();
     }
