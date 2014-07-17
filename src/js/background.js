@@ -7,11 +7,23 @@ function addNopeContextMenu () {
     chrome.contextMenus.update("nope", {
         "enabled": true,
         "onclick": function (info, tab) {
-            console.log(info);
-            console.log(tab);
+            addNopeForWebsite(tab.id);
         },
         "title": "Add Nope for this website"
     });
+}
+
+function addNopeForWebsite (tabId) {
+    var tabUrl = tabs[tabId];
+    if (websitesNoped.indexOf(tabUrl) == -1) { // We add the website to the nopedWebsites;
+        websitesNoped.push(tabUrl);
+        chrome.storage.sync.set({"websitesNoped": websitesNoped});
+    }
+    for (tab in tabs) {
+        if (tabs[tab] == tabUrl) {
+            chrome.tabs.reload(parseInt(tab));
+        }
+    }
 }
 
 function nopeIsNotReady () {
@@ -47,44 +59,54 @@ function updateContextMenu (tabId) {
     }
 }
 
-function removeNopeContextMenu() {
+function removeNopeContextMenu () {
     chrome.contextMenus.update("nope", {
         "enabled": true,
         "onclick": function (info, tab) {
-            console.log(info);
-            console.log(tab);
+            removeNopeForWebsite(tab.id)
         },
         "title": "Remove Nope for this website"
     });
 }
 
-function removeNopeForWebsite(tab) {
-    console.log(tab);
-}
-
-function nopeNewWebsite(info, tab) {
-    console.log("meu");
-    console.log(tab);
+function removeNopeForWebsite (tabId) {
+    var tabUrl = tabs[tabId];
+    if (websitesNoped.indexOf(tabUrl) > -1) { // We remove the website from the nopedWebsites;
+        websitesNoped.splice(websitesNoped.indexOf(tabUrl), 1);
+        chrome.storage.sync.set({"websitesNoped": websitesNoped});
+    }
+    for (tab in tabs) {
+        if (tabs[tab] == tabUrl) {
+            chrome.tabs.reload(parseInt(tab));
+        }
+    }
 }
 
 /* Chrome events. */
-chrome.runtime.onMessage.addListener(
-    function(request, sender, sendResponse) {
-        console.log("On ajoute la tab");
-        tabs[sender.tab.id] = request.url;
-        if (websitesNoped.indexOf(request.url) > -1) {
-            if (nopeIsActivated) {
-                sendResponse({nopeIt: true});
-            } else {
-                sendResponse({nopeIt: false});
-            }
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+    tabs[sender.tab.id] = request.url;
+    if (websitesNoped.indexOf(request.url) > -1) {
+        if (nopeIsActivated) {
+            sendResponse({nopeIt: true});
         } else {
             sendResponse({nopeIt: false});
         }
-    });
+    } else {
+        sendResponse({nopeIt: false});
+    }
+});
 
-chrome.runtime.onInstalled.addListener(function() {
-    chrome.storage.sync.get(["websitesNoped", "nopeIsActivated"], function(nopeSync) {
+chrome.runtime.onStartup.addListener(function () {
+    chrome.contextMenus.create({
+        "enabled": false,
+        "id": "nope",
+        "onclick": function (info, tab) {},
+        "title": "Reload this webpage to Nope it!"
+    });
+});
+
+chrome.runtime.onInstalled.addListener(function () {
+    chrome.storage.sync.get(["websitesNoped", "nopeIsActivated"], function (nopeSync) {
         if (nopeSync.websitesNoped == undefined) {
             chrome.storage.sync.set({"websitesNoped": []});
         }
@@ -100,17 +122,16 @@ chrome.runtime.onInstalled.addListener(function() {
     });
 });
 
-chrome.tabs.onRemoved.addListener(function(removeInfo) {
+chrome.tabs.onRemoved.addListener(function (removeInfo) {
     delete tabs[removeInfo.tabId]; // Remove the tab in the dictionnary.
 });
 
-chrome.tabs.onActivated.addListener(function(activeInfo) {
+chrome.tabs.onActivated.addListener(function (activeInfo) {
     checkNope(activeInfo.tabId);
 });
 
-chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, updatedTab) {
+chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, updatedTab) {
     if (changeInfo.status == "complete") {
-        console.log("On check la tab");
         checkNope(tabId);
     }
 });
