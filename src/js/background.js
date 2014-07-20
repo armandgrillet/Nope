@@ -73,7 +73,18 @@ function removeNopeForWebsite (tabUrl) {
     }
 }
 
+function updateWebsitesNoped () {
+    chrome.storage.sync.get("websitesNoped", function(nopeSync) {
+        websitesNoped = nopeSync.websitesNoped;
+    });
+}
+
 /* Chrome events. */
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+    console.log("meuh");
+    sendResponse({nopeIt: false});
+});
+
 chrome.runtime.onStartup.addListener(function () {
     chrome.contextMenus.create({
         "enabled": false,
@@ -116,6 +127,16 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, updatedTab) {
             checkNope(updatedTab.url.split('/')[0] + "//" + updatedTab.url.split('/')[2]);
         } else { // This is not a webpage.
             disableNope();
+        }
+    }
+});
+
+chrome.storage.onChanged.addListener(function (changes, namespace) { // What to do when a storage value is changed.
+    for (key in changes) {
+        switch (key) {
+            case "websitesNoped":
+                updateWebsitesNoped();
+                break;
         }
     }
 });
