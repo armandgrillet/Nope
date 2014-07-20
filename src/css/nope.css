@@ -1,13 +1,22 @@
+
+
 body {
 	height: 100%;
 	width: 100%;
-
 	background: #fafafa;
+}
+
+#container {
+	width: 50%;
+	margin: 0 auto;
+	text-align: center;
 }
 
 h1 {
 	display: none;
 	font-size: 15em;
+}
 
-	text-align: center;
+button {
+	font-family: helvetica, arial, sans-serif;
 }

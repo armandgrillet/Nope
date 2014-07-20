@@ -1,61 +1,58 @@
 var websitesNoped; // Webistes bloked by Nope.
 var nopeIsActivated;
-var tabs = {}; // Tabs and url.
 
 /* Functions. */
 function addNopeContextMenu () {
     chrome.contextMenus.update("nope", {
         "enabled": true,
         "onclick": function (info, tab) {
-            addNopeForWebsite(tab.id);
+            addNopeForWebsite(tab.url.split('/')[0] + "//" + tab.url.split('/')[2]);
         },
         "title": "Add Nope for this website"
     });
 }
 
-function addNopeForWebsite (tabId) {
-    var tabUrl = tabs[tabId];
+function addNopeForWebsite (tabUrl) {
     if (websitesNoped.indexOf(tabUrl) == -1) { // We add the website to the nopedWebsites;
         websitesNoped.push(tabUrl);
         chrome.storage.sync.set({"websitesNoped": websitesNoped});
     }
-    for (tab in tabs) {
-        if (tabs[tab] == tabUrl) {
-            chrome.tabs.reload(parseInt(tab));
+    chrome.tabs.query( {} ,function (tabs) { // The Query {} was missing here
+        for (var i = 0; i < tabs.length; i++) {
+            if (tabs[i].url.indexOf(tabUrl) == 0) { // The tab is on a website which has been affected by Nope.
+                chrome.tabs.executeScript(tabs[i].id, {file: "js/redirect.js"});
+            }
         }
-    }
-}
-
-function nopeIsNotReady () {
-    chrome.contextMenus.update("nope", {
-        "enabled": false,
-        "onclick": function (info, tab) {},
-        "title": "Reload this webpage to Nope it!"
     });
 }
 
-function checkNope (tabId) {
+function checkNope (tabUrl) {
     /* Check variables. */
     if (websitesNoped == undefined || nopeIsActivated == undefined) {
         chrome.storage.sync.get(["websitesNoped", "nopeIsActivated"], function(nopeSync) {
             websitesNoped = nopeSync.websitesNoped;
             nopeIsActivated = nopeSync.nopeIsActivated;
-            updateContextMenu(tabId);
+            updateContextMenu(tabUrl);
         });
     } else {
-        updateContextMenu(tabId);
+        updateContextMenu(tabUrl);
     }
 }
 
-function updateContextMenu (tabId) {
-    if (tabs[tabId] != undefined) { // If the tab has been updated after the installation of Nope.
-        if (websitesNoped.indexOf(tabs[tabId]) > -1) {
-            removeNopeContextMenu();
-        } else {
-            addNopeContextMenu();
-        }
+function disableNope () {
+    chrome.contextMenus.update("nope", {
+        "enabled": false,
+        "onclick": function (info, tab) {},
+        "title": "This page can't be restricted by Nope!"
+    });
+}
+
+function updateContextMenu (tabUrl) {
+    if (websitesNoped.indexOf(tabUrl) > -1) {
+        console.log("On le connait");
+        chrome.tabs.executeScript(null, {file: "js/redirect.js"});
     } else {
-        nopeIsNotReady();
+        addNopeContextMenu();
     }
 }
 
@@ -63,39 +60,20 @@ function removeNopeContextMenu () {
     chrome.contextMenus.update("nope", {
         "enabled": true,
         "onclick": function (info, tab) {
-            removeNopeForWebsite(tab.id)
+            removeNopeForWebsite(tab.url.split('/')[0] + "//" + tab.url.split('/')[2]);
         },
         "title": "Remove Nope for this website"
     });
 }
 
-function removeNopeForWebsite (tabId) {
-    var tabUrl = tabs[tabId];
+function removeNopeForWebsite (tabUrl) {
     if (websitesNoped.indexOf(tabUrl) > -1) { // We remove the website from the nopedWebsites;
         websitesNoped.splice(websitesNoped.indexOf(tabUrl), 1);
         chrome.storage.sync.set({"websitesNoped": websitesNoped});
     }
-    for (tab in tabs) {
-        if (tabs[tab] == tabUrl) {
-            chrome.tabs.reload(parseInt(tab));
-        }
-    }
 }
 
 /* Chrome events. */
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-    tabs[sender.tab.id] = request.url;
-    if (websitesNoped.indexOf(request.url) > -1) {
-        if (nopeIsActivated) {
-            sendResponse({nopeIt: true});
-        } else {
-            sendResponse({nopeIt: false});
-        }
-    } else {
-        sendResponse({nopeIt: false});
-    }
-});
-
 chrome.runtime.onStartup.addListener(function () {
     chrome.contextMenus.create({
         "enabled": false,
@@ -118,20 +96,26 @@ chrome.runtime.onInstalled.addListener(function () {
         "enabled": false,
         "id": "nope",
         "onclick": function (info, tab) {},
-        "title": "Reload this webpage to Nope it!"
+        "title": "Nope"
     });
 });
 
-chrome.tabs.onRemoved.addListener(function (removeInfo) {
-    delete tabs[removeInfo.tabId]; // Remove the tab in the dictionnary.
-});
-
 chrome.tabs.onActivated.addListener(function (activeInfo) {
-    checkNope(activeInfo.tabId);
+    chrome.tabs.get(activeInfo.tabId, function (tab) { // New tab, we check the url.
+        if (tab.url.indexOf("http:") == 0 || tab.url.indexOf("https:") == 0) { // This is a normal webpage.
+            checkNope(tab.url.split('/')[0] + "//" + tab.url.split('/')[2]);
+        } else {
+            disableNope();
+        }
+    });
 });
 
 chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, updatedTab) {
-    if (changeInfo.status == "complete") {
-        checkNope(tabId);
+    if (changeInfo.status == "loading") { // Something is loading.
+        if (updatedTab.url.indexOf("http:") == 0 || updatedTab.url.indexOf("https:") == 0) {// A webpage is loading.
+            checkNope(updatedTab.url.split('/')[0] + "//" + updatedTab.url.split('/')[2]);
+        } else { // This is not a webpage.
+            disableNope();
+        }
     }
 });
