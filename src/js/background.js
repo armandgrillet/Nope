@@ -1,5 +1,5 @@
+var nopeIsActivated; // Nope is activated or not?
 var websitesNoped; // Webistes bloked by Nope.
-var nopeIsActivated;
 
 /* Functions. */
 function addNopeContextMenu () {
@@ -17,21 +17,49 @@ function addNopeForWebsite (tabUrl) {
         websitesNoped.push(tabUrl);
         chrome.storage.sync.set({"websitesNoped": websitesNoped});
     }
-    chrome.tabs.query( {} ,function (tabs) { // The Query {} was missing here
-        for (var i = 0; i < tabs.length; i++) {
-            if (tabs[i].url.indexOf(tabUrl) == 0) { // The tab is on a website which has been affected by Nope.
-                chrome.tabs.executeScript(tabs[i].id, {file: "js/redirect.js"});
+
+    if (nopeIsActivated) {
+        chrome.tabs.query({}, function (tabs) { // The Query {} was missing here
+            for (var i = 0; i < tabs.length; i++) {
+                if (tabs[i].url.indexOf(tabUrl) == 0) { // The tab is on a website which has been affected by Nope.
+                    chrome.tabs.executeScript(tabs[i].id, {file: "js/redirect.js"});
+                }
             }
-        }
-    });
+        });
+    } else {
+        removeNopeContextMenu();
+    }
+}
+
+function changeNopeActivation () {
+    nopeIsActivated = ! nopeIsActivated;
+    chrome.storage.sync.set({"nopeIsActivated": nopeIsActivated});
+
+    if (nopeIsActivated) {
+        chrome.browserAction.setIcon({path: "img/icon16.png"}, function () {
+            chrome.tabs.query({}, function (tabs) { // The Query {} was missing here
+                for (var i = 0; i < tabs.length; i++) {
+                    for (var j = 0; j < websitesNoped.length; j++) {
+                        if (tabs[i].url.indexOf(websitesNoped[j]) == 0) { // The tab is on a website which has been affected by Nope.
+                            chrome.tabs.executeScript(tabs[i].id, {file: "js/redirect.js"});
+                        }
+                    }  
+                }
+            });
+        });
+    } else {
+        chrome.browserAction.setIcon({
+            path: "img/icon16-disabled.png"
+        });
+    }
 }
 
 function checkNope (tabUrl) {
     /* Check variables. */
     if (websitesNoped == undefined || nopeIsActivated == undefined) {
-        chrome.storage.sync.get(["websitesNoped", "nopeIsActivated"], function(nopeSync) {
-            websitesNoped = nopeSync.websitesNoped;
+        chrome.storage.sync.get(["nopeIsActivated", "websitesNoped"], function(nopeSync) {
             nopeIsActivated = nopeSync.nopeIsActivated;
+            websitesNoped = nopeSync.websitesNoped;
             updateContextMenu(tabUrl);
         });
     } else {
@@ -48,11 +76,18 @@ function disableNope () {
 }
 
 function updateContextMenu (tabUrl) {
-    if (websitesNoped.indexOf(tabUrl) > -1) {
-        console.log("On le connait");
-        chrome.tabs.executeScript(null, {file: "js/redirect.js"});
+    if (nopeIsActivated) { // If Nope is activated.
+        if (websitesNoped.indexOf(tabUrl) > -1) {
+            chrome.tabs.executeScript(null, {file: "js/redirect.js"});
+        } else {
+            addNopeContextMenu();
+        }
     } else {
-        addNopeContextMenu();
+        if (websitesNoped.indexOf(tabUrl) > -1) {
+            removeNopeContextMenu();
+        } else {
+            addNopeContextMenu();
+        }
     }
 }
 
@@ -70,6 +105,7 @@ function removeNopeForWebsite (tabUrl) {
     if (websitesNoped.indexOf(tabUrl) > -1) { // We remove the website from the nopedWebsites;
         websitesNoped.splice(websitesNoped.indexOf(tabUrl), 1);
         chrome.storage.sync.set({"websitesNoped": websitesNoped});
+        removeNopeContextMenu();
     }
 }
 
@@ -80,9 +116,16 @@ function updateWebsitesNoped () {
 }
 
 /* Chrome events. */
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-    console.log("meuh");
-    sendResponse({nopeIt: false});
+chrome.browserAction.onClicked.addListener(function () {
+    if (nopeIsActivated == undefined) {
+        chrome.storage.sync.get(["nopeIsActivated", "websitesNoped"], function(nopeSync) {
+            nopeIsActivated = nopeSync.nopeIsActivated;
+            websitesNoped = nopeSync.websitesNoped;
+            changeNopeActivation();
+        });
+    } else {
+        changeNopeActivation();
+    }
 });
 
 chrome.runtime.onStartup.addListener(function () {
