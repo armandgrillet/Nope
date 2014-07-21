@@ -12,26 +12,26 @@ Nope has been made to be a cool way to make you work, there are many fonts and c
 
 ##Credit
 ####Fonts
-* Indie Flower
-* Shadows Into Light
-* Pacifico
-* Dancing Script
-* Marck Script
-* Calligraffitti
-* Berkshire Swash
-* Kaushan Script
-* Damion
-* Niconne
-* Courgette
-* Rochester
-* Parisienne
-* Merienda One
 * Alex Brush
-* La Belle Aurore
-* Norican
-* Redressed
+* Berkshire Swash
+* Calligraffitti
+* Condiment;
+* Courgette
+* Damion
+* Dancing Script
+* Indie Flower
 * Julee
-* Condiment
+* Kaushan Script
+* La Belle Aurore
+* Marck Script
+* Merienda One
+* Niconne
+* Norican
+* Parisienne
+* Pacifico
+* Redressed
+* Rochester
+* Shadows Into Light
 
 ####Code
 * Pure by Yahoo
