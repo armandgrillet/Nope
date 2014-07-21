@@ -34,6 +34,5 @@ Nope has been made to be a cool way to make you work, there are many fonts and c
 * Condiment
 
 ####Code
-* Webfont
-* jQuery
-* 
+* Pure by Yahoo
+* Webfont by Google and Typekit
