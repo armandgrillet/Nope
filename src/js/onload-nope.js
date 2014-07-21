@@ -1,12 +1,11 @@
 window.onload = function () {
     /* Colors. */
-    $("#title").css("color", color);
+    document.getElementById("title").style.color = color;
 
     /* Fonts. */
-    $("#title").css("font-family", "'" + font + "', cursive");
-    $("#title").css("display", "block");
-
-    $("#title").addClass("animated tada");
+    document.getElementById("title").style.fontFamily = "'" + font + "', cursive";
+    document.getElementById("title").style.display = "block";
+    document.getElementById("title").className = "animated tada";
 
     /* Last url */
     var url = null;
@@ -15,7 +14,7 @@ window.onload = function () {
 	if (regex != null) {
 	    url = regex[1];
 	    originUrl = url.split('/')[0] + "//" + url.split('/')[2];
-	    $("#remove-nope").html("Remove Nope for " + originUrl);
+	    document.getElementById("remove-nope").innerHTML = "Remove Nope for " + originUrl;
 	    chrome.storage.sync.get(["websitesNoped", "nopeIsActivated"], function(nopeSync) {
 			if (nopeSync.websitesNoped.indexOf(originUrl) == -1) {
 				window.close();
@@ -25,7 +24,7 @@ window.onload = function () {
 		window.close();
 	}
 
-	$("#remove-nope").on("click", function () {
+	document.getElementById("remove-nope").onclick = function () {
 		chrome.storage.sync.get(["websitesNoped", "nopeIsActivated"], function(nopeSync) {
 			if (nopeSync.websitesNoped.indexOf(originUrl) > -1) {
 				var websitesNoped = nopeSync.websitesNoped;
@@ -37,5 +36,5 @@ window.onload = function () {
 				window.close();
 			}
         });
-	});
+	};
 }
