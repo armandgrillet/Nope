@@ -175,6 +175,8 @@ chrome.runtime.onInstalled.addListener(function () {
 
         if (nopeSync.nopeIsActivated == undefined) {
             chrome.storage.sync.set({"nopeIsActivated": true});
+            nopeIsActivated = false; // Little trick, it will become true with changeNopeActivation();
+            changeNopeActivation();
         } else {
             nopeIsActivated = ! nopeSync.nopeIsActivated;
             changeNopeActivation();
