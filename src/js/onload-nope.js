@@ -15,7 +15,6 @@ window.onload = function () {
 	if (regex != null) {
 	    url = regex[1];
 	    originUrl = url.split('/')[0] + "//" + url.split('/')[2];
-	    // TODO : Display block
 	    $("#remove-nope").html("Remove Nope for " + originUrl);
 	    chrome.storage.sync.get(["websitesNoped", "nopeIsActivated"], function(nopeSync) {
 			if (nopeSync.websitesNoped.indexOf(originUrl) == -1) {
@@ -28,7 +27,6 @@ window.onload = function () {
 
 	$("#remove-nope").on("click", function () {
 		chrome.storage.sync.get(["websitesNoped", "nopeIsActivated"], function(nopeSync) {
-			console.log(nopeSync.websitesNoped.indexOf(originUrl));
 			if (nopeSync.websitesNoped.indexOf(originUrl) > -1) {
 				var websitesNoped = nopeSync.websitesNoped;
 				websitesNoped.splice(websitesNoped.indexOf(originUrl), 1);

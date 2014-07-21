@@ -37,10 +37,10 @@ function changeNopeActivation () {
 
     if (nopeIsActivated) {
         chrome.browserAction.setIcon({path: "img/icon16.png"}, function () {
-            chrome.tabs.query({}, function (tabs) { // The Query {} was missing here
+            chrome.tabs.query({}, function (tabs) {
                 for (var i = 0; i < tabs.length; i++) {
                     for (var j = 0; j < websitesNoped.length; j++) {
-                        if (tabs[i].url.indexOf(websitesNoped[j]) == 0) { // The tab is on a website which has been affected by Nope.
+                        if (tabs[i].url.indexOf(websitesNoped[j]) > -1) { // The tab is on a website which has been affected by Nope.
                             chrome.tabs.update(tabs[i].id, {url: chrome.extension.getURL("nope.html?url=" + tabs[i].url)});
                         }
                     }  
@@ -48,8 +48,18 @@ function changeNopeActivation () {
             });
         });
     } else {
-        chrome.browserAction.setIcon({
-            path: "img/icon16-disabled.png"
+        chrome.browserAction.setIcon({path: "img/icon16-disabled.png"}, function () {
+            chrome.tabs.query({}, function (tabs) {
+                for (var i = 0; i < tabs.length; i++) {
+                    if (tabs[i].url.indexOf("nope.html") > -1) { // e.g. "chrome-extension://nflenaaodhkcnhfcmkjnajommdjlocee/nope.html?url=http://korben.info/"
+                        var url = null;
+                        var regex = new RegExp("[\\?&]url=([^&#]*)").exec(tabs[i].url);
+                        if (regex != null) {
+                            chrome.tabs.update(tabs[i].id, {url: regex[1]});
+                        }
+                    }
+                }
+            });
         });
     }
 }
@@ -117,6 +127,17 @@ function removeNopeForWebsite (tabUrl) {
 function updateWebsitesNoped () {
     chrome.storage.sync.get("websitesNoped", function(nopeSync) {
         websitesNoped = nopeSync.websitesNoped;
+        chrome.tabs.query({}, function (tabs) {
+            for (var i = 0; i < tabs.length; i++) {
+                if (tabs[i].url.indexOf("nope.html") > -1) { // e.g. "chrome-extension://nflenaaodhkcnhfcmkjnajommdjlocee/nope.html?url=http://korben.info/"
+                    var url = null;
+                    var regex = new RegExp("[\\?&]url=([^&#]*)").exec(tabs[i].url);
+                    if (regex != null && websitesNoped.indexOf(originUrl(regex[1])) == -1) { // The tab is on Nope and the url is now accepted.
+                        chrome.tabs.update(tabs[i].id, {url: regex[1]});
+                    }
+                }
+            }
+        });
     });
 }
 
@@ -125,7 +146,6 @@ chrome.browserAction.onClicked.addListener(function () {
     if (nopeIsActivated == undefined) {
         chrome.storage.sync.get(["nopeIsActivated", "websitesNoped"], function(nopeSync) {
             nopeIsActivated = nopeSync.nopeIsActivated;
-            console.log("Avant : " + nopeIsActivated);
             websitesNoped = nopeSync.websitesNoped;
             changeNopeActivation();
         });
@@ -147,9 +167,15 @@ chrome.runtime.onInstalled.addListener(function () {
     chrome.storage.sync.get(["websitesNoped", "nopeIsActivated"], function (nopeSync) {
         if (nopeSync.websitesNoped == undefined) {
             chrome.storage.sync.set({"websitesNoped": []});
+        } else {
+            websitesNoped = nopeSync.websitesNoped;
         }
+
         if (nopeSync.nopeIsActivated == undefined) {
             chrome.storage.sync.set({"nopeIsActivated": true});
+        } else {
+            nopeIsActivated = ! nopeSync.nopeIsActivated;
+            changeNopeActivation();
         }
     });
     chrome.contextMenus.create({
