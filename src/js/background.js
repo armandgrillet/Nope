@@ -6,7 +6,7 @@ function addNopeContextMenu () {
     chrome.contextMenus.update("nope", {
         "enabled": true,
         "onclick": function (info, tab) {
-            addNopeForWebsite(tab.url.split('/')[0] + "//" + tab.url.split('/')[2]);
+            addNopeForWebsite(originUrl(tab.url));
         },
         "title": "Add Nope for this website"
     });
@@ -22,7 +22,7 @@ function addNopeForWebsite (tabUrl) {
         chrome.tabs.query({}, function (tabs) { // The Query {} was missing here
             for (var i = 0; i < tabs.length; i++) {
                 if (tabs[i].url.indexOf(tabUrl) == 0) { // The tab is on a website which has been affected by Nope.
-                    chrome.tabs.executeScript(tabs[i].id, {file: "js/redirect.js"});
+                    chrome.tabs.update(tabs[i].id, {url: chrome.extension.getURL("nope.html?url=" + tabs[i].url)});
                 }
             }
         });
@@ -41,7 +41,7 @@ function changeNopeActivation () {
                 for (var i = 0; i < tabs.length; i++) {
                     for (var j = 0; j < websitesNoped.length; j++) {
                         if (tabs[i].url.indexOf(websitesNoped[j]) == 0) { // The tab is on a website which has been affected by Nope.
-                            chrome.tabs.executeScript(tabs[i].id, {file: "js/redirect.js"});
+                            chrome.tabs.update(tabs[i].id, {url: chrome.extension.getURL("nope.html?url=" + tabs[i].url)});
                         }
                     }  
                 }
@@ -75,10 +75,14 @@ function disableNope () {
     });
 }
 
+function originUrl (url) {
+    return url.split('/')[0] + "//" + url.split('/')[2];
+}
+
 function updateContextMenu (tabUrl) {
     if (nopeIsActivated) { // If Nope is activated.
-        if (websitesNoped.indexOf(tabUrl) > -1) {
-            chrome.tabs.executeScript(null, {file: "js/redirect.js"});
+        if (websitesNoped.indexOf(originUrl(tabUrl)) > -1) {
+            chrome.tabs.update({url: chrome.extension.getURL("nope.html?url=" + tabUrl)});
         } else {
             addNopeContextMenu();
         }
@@ -95,7 +99,7 @@ function removeNopeContextMenu () {
     chrome.contextMenus.update("nope", {
         "enabled": true,
         "onclick": function (info, tab) {
-            removeNopeForWebsite(tab.url.split('/')[0] + "//" + tab.url.split('/')[2]);
+            removeNopeForWebsite(originUrl(tab.url));
         },
         "title": "Remove Nope for this website"
     });
@@ -104,8 +108,9 @@ function removeNopeContextMenu () {
 function removeNopeForWebsite (tabUrl) {
     if (websitesNoped.indexOf(tabUrl) > -1) { // We remove the website from the nopedWebsites;
         websitesNoped.splice(websitesNoped.indexOf(tabUrl), 1);
-        chrome.storage.sync.set({"websitesNoped": websitesNoped});
-        removeNopeContextMenu();
+        chrome.storage.sync.set({"websitesNoped": websitesNoped}, function () {
+            addNopeContextMenu();
+        });
     }
 }
 
@@ -120,6 +125,7 @@ chrome.browserAction.onClicked.addListener(function () {
     if (nopeIsActivated == undefined) {
         chrome.storage.sync.get(["nopeIsActivated", "websitesNoped"], function(nopeSync) {
             nopeIsActivated = nopeSync.nopeIsActivated;
+            console.log("Avant : " + nopeIsActivated);
             websitesNoped = nopeSync.websitesNoped;
             changeNopeActivation();
         });
@@ -157,7 +163,7 @@ chrome.runtime.onInstalled.addListener(function () {
 chrome.tabs.onActivated.addListener(function (activeInfo) {
     chrome.tabs.get(activeInfo.tabId, function (tab) { // New tab, we check the url.
         if (tab.url.indexOf("http:") == 0 || tab.url.indexOf("https:") == 0) { // This is a normal webpage.
-            checkNope(tab.url.split('/')[0] + "//" + tab.url.split('/')[2]);
+            checkNope(tab.url);
         } else {
             disableNope();
         }
@@ -167,7 +173,7 @@ chrome.tabs.onActivated.addListener(function (activeInfo) {
 chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, updatedTab) {
     if (changeInfo.status == "loading") { // Something is loading.
         if (updatedTab.url.indexOf("http:") == 0 || updatedTab.url.indexOf("https:") == 0) {// A webpage is loading.
-            checkNope(updatedTab.url.split('/')[0] + "//" + updatedTab.url.split('/')[2]);
+            checkNope(updatedTab.url);
         } else { // This is not a webpage.
             disableNope();
         }

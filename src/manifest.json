@@ -3,7 +3,7 @@
     "version": "1.0",
     "manifest_version": 2,
     "author": "Armand Grillet",
-    "description": "Enhance your productivity",
+    "description": "Enhance your productivity.",
     "homepage_url": "https://github.com/ArmandGrillet/Preview-for-Designer-News",
 
     "background": {
@@ -23,7 +23,6 @@
         "96": "img/icon96.png",
         "128": "img/icon128.png"
     },
-    "options_page": "nope.html",
     "permissions": [
         "contextMenus",
         "http://*/*",
