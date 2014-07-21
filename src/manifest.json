@@ -3,8 +3,8 @@
     "version": "1.0",
     "manifest_version": 2,
     "author": "Armand Grillet",
-    "description": "Enhance your productivity.",
-    "homepage_url": "https://github.com/ArmandGrillet/Preview-for-Designer-News",
+    "description": "Improve your productivity, with style.",
+    "homepage_url": "https://github.com/ArmandGrillet/Nope",
 
     "background": {
     	"scripts": [
@@ -22,8 +22,6 @@
     },
     "permissions": [
         "contextMenus",
-        "http://*/*",
-        "https://*/*",
         "storage",
         "tabs"
     ],
