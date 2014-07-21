@@ -37,6 +37,7 @@ function changeNopeActivation () {
 
     if (nopeIsActivated) {
         chrome.browserAction.setIcon({path: "img/icon16.png"}, function () {
+            chrome.browserAction.setTitle({title: "Deactivate Nope"});
             chrome.tabs.query({}, function (tabs) {
                 for (var i = 0; i < tabs.length; i++) {
                     for (var j = 0; j < websitesNoped.length; j++) {
@@ -49,6 +50,7 @@ function changeNopeActivation () {
         });
     } else {
         chrome.browserAction.setIcon({path: "img/icon16-disabled.png"}, function () {
+            chrome.browserAction.setTitle({title: "Activate Nope"});
             chrome.tabs.query({}, function (tabs) {
                 for (var i = 0; i < tabs.length; i++) {
                     if (tabs[i].url.indexOf("nope.html") > -1) { // e.g. "chrome-extension://nflenaaodhkcnhfcmkjnajommdjlocee/nope.html?url=http://korben.info/"
@@ -89,22 +91,6 @@ function originUrl (url) {
     return url.split('/')[0] + "//" + url.split('/')[2];
 }
 
-function updateContextMenu (tabUrl) {
-    if (nopeIsActivated) { // If Nope is activated.
-        if (websitesNoped.indexOf(originUrl(tabUrl)) > -1) {
-            chrome.tabs.update({url: chrome.extension.getURL("nope.html?url=" + tabUrl)});
-        } else {
-            addNopeContextMenu();
-        }
-    } else {
-        if (websitesNoped.indexOf(tabUrl) > -1) {
-            removeNopeContextMenu();
-        } else {
-            addNopeContextMenu();
-        }
-    }
-}
-
 function removeNopeContextMenu () {
     chrome.contextMenus.update("nope", {
         "enabled": true,
@@ -121,6 +107,22 @@ function removeNopeForWebsite (tabUrl) {
         chrome.storage.sync.set({"websitesNoped": websitesNoped}, function () {
             addNopeContextMenu();
         });
+    }
+}
+
+function updateContextMenu (tabUrl) {
+    if (nopeIsActivated) { // If Nope is activated.
+        if (websitesNoped.indexOf(originUrl(tabUrl)) > -1) {
+            chrome.tabs.update({url: chrome.extension.getURL("nope.html?url=" + tabUrl)});
+        } else {
+            addNopeContextMenu();
+        }
+    } else {
+        if (websitesNoped.indexOf(originUrl(tabUrl)) > -1) {
+            removeNopeContextMenu();
+        } else {
+            addNopeContextMenu();
+        }
     }
 }
 
@@ -198,7 +200,7 @@ chrome.tabs.onActivated.addListener(function (activeInfo) {
 
 chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, updatedTab) {
     if (changeInfo.status == "loading") { // Something is loading.
-        if (updatedTab.url.indexOf("http:") == 0 || updatedTab.url.indexOf("https:") == 0) {// A webpage is loading.
+        if (updatedTab.url.indexOf("http:") == 0 || updatedTab.url.indexOf("https:") == 0) { // A webpage is loading.
             checkNope(updatedTab.url);
         } else { // This is not a webpage.
             disableNope();
