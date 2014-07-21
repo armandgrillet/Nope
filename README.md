@@ -1,6 +1,6 @@
 # Nope
 
-Nope is an extension for Google Chrome. When you want to stop spending time on a website, just click on "Add Nope for this website" and it will be blocked! 
+Nope is an extension for Google Chrome. When you want to stop spending time on a website, just click on "Add Nope for this website" and it will be blocked.
 
 Nope is available on the [Chrome Web Store](https://chrome.google.com/webstore/detail/nope/hfbaphdopbafbphhpiieodfdmhppcjcf).
 
