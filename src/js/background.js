@@ -36,7 +36,7 @@ function changeNopeActivation () {
     chrome.storage.sync.set({"nopeIsActivated": nopeIsActivated});
 
     if (nopeIsActivated) {
-        chrome.browserAction.setIcon({path: "img/icon16.png"}, function () {
+        chrome.browserAction.setIcon({path: "img/icon38.png"}, function () {
             chrome.browserAction.setTitle({title: "Deactivate Nope"});
             chrome.tabs.query({}, function (tabs) {
                 for (var i = 0; i < tabs.length; i++) {
@@ -49,7 +49,7 @@ function changeNopeActivation () {
             });
         });
     } else {
-        chrome.browserAction.setIcon({path: "img/icon16-disabled.png"}, function () {
+        chrome.browserAction.setIcon({path: "img/icon38-disabled.png"}, function () {
             chrome.browserAction.setTitle({title: "Activate Nope"});
             chrome.tabs.query({}, function (tabs) {
                 for (var i = 0; i < tabs.length; i++) {
