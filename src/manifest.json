@@ -1,9 +1,9 @@
 {
     "name": "Nope",
-    "version": "1.0",
+    "version": "1.1",
     "manifest_version": 2,
     "author": "Armand Grillet",
-    "description": "Improve your productivity, with style.",
+    "description": "Are you spending too much time on a website? Nope it!",
     "homepage_url": "https://github.com/ArmandGrillet/Nope",
 
     "background": {
